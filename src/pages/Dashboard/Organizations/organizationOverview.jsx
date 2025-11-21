@@ -1,6 +1,5 @@
-// src/pages/dashboard/components/Organizations/OrganizationOverview.jsx (UPDATED FOR INVOICING)
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
@@ -12,33 +11,31 @@ import {
     TrashIcon,
     BriefcaseIcon,
     DocumentTextIcon,
-    ClipboardDocumentIcon,
     UserIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
     PlusIcon,
-    CurrencyDollarIcon, // ADDED for Invoicing
+    CurrencyDollarIcon,
+    FolderOpenIcon,
+    ArrowDownTrayIcon
 } from "@heroicons/react/24/solid";
-import {
-    UsersIcon
-} from "@heroicons/react/24/outline";
 
-// --- NEW COMPONENT: INVOICE LIST (for displaying under each project) ---
-const InvoiceList = ({ projectId, orgId, navigate, organizationName }) => {
+// NOTE: In your local Vite project, replace this with import.meta.env.VITE_BACKEND_URL
+const API_BASE_URL = "http://localhost:5000";
+
+// --- SUB-COMPONENT: INVOICE LIST ---
+const InvoiceList = ({ projectId, orgId, navigate }) => {
     const [invoices, setInvoices] = useState([]);
     const [invLoading, setInvLoading] = useState(true);
 
-    // Fetch invoices specific to this project
     useEffect(() => {
         const fetchInvoices = async () => {
             setInvLoading(true);
             try {
-                // Hitting the new backend endpoint: /api/invoices/organization/:orgId/project/:projectId
-                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/invoices/organization/${orgId}/project/${projectId}`);
+                const response = await axios.get(`${API_BASE_URL}/api/invoices/organization/${orgId}/project/${projectId}`);
                 setInvoices(response.data);
             } catch (err) {
                 console.error("Failed to fetch invoices:", err);
-                // toast.error("Failed to load invoices for this project."); // Commented to avoid excessive toasts
             } finally {
                 setInvLoading(false);
             }
@@ -46,44 +43,50 @@ const InvoiceList = ({ projectId, orgId, navigate, organizationName }) => {
         fetchInvoices();
     }, [orgId, projectId]);
 
-    if (invLoading) return <p className="text-sm text-gray-400 italic">Loading invoices...</p>;
+    if (invLoading) return (
+        <div className="text-xs text-gray-400 flex items-center gap-2 mt-2">
+            <div className="w-3 h-3 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+            Loading invoices...
+        </div>
+    );
 
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'Paid': return 'bg-green-100 text-green-800';
-            case 'Sent': return 'bg-blue-100 text-blue-800';
-            case 'Overdue': return 'bg-red-100 text-red-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'Paid': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+            case 'Sent': return 'bg-blue-100 text-blue-700 border-blue-200';
+            case 'Overdue': return 'bg-red-100 text-red-700 border-red-200';
+            default: return 'bg-gray-100 text-gray-700 border-gray-200';
         }
     };
 
     return (
-        <div className='space-y-2'>
+        <div className='space-y-2 mt-3'>
             {invoices.length > 0 ? (
                 invoices.map((invoice) => (
                     <div 
                         key={invoice._id}
-                        // Navigate to the Invoice Preview page: /invoices/:orgId/:id
                         onClick={() => navigate(`/dashboard/invoices/${orgId}/${invoice._id}`)} 
-                        className="flex justify-between items-center p-3 border rounded-lg hover:bg-white text-sm transition-all duration-200 cursor-pointer hover:shadow-sm"
+                        className="flex justify-between items-center p-2.5 bg-white border border-gray-200 rounded-lg hover:border-[#4A90E2] hover:shadow-sm transition-all cursor-pointer group"
                     >
-                        <span className='truncate font-medium flex items-center'>
-                            <CurrencyDollarIcon className="h-4 w-4 mr-2 text-green-400 flex-shrink-0" />
-                            Invoice # **{invoice.invoiceNo}**
+                        <span className='text-xs font-semibold text-gray-700 flex items-center group-hover:text-[#4A90E2]'>
+                            <CurrencyDollarIcon className="h-3.5 w-3.5 mr-1.5 text-gray-400 group-hover:text-[#4A90E2]" />
+                            #{invoice.invoiceNo}
                         </span>
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusStyle(invoice.status)}`}>
+                        <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full border ${getStatusStyle(invoice.status)}`}>
                             {invoice.status}
                         </span>
                     </div>
                 ))
             ) : (
-                <p className="text-sm text-gray-500 italic">No invoices found for this project.</p>
+                <div className="text-xs text-gray-400 italic pl-1 py-1 border border-dashed border-gray-200 rounded bg-gray-50/50 text-center">
+                    No invoices found
+                </div>
             )}
         </div>
     );
 };
-// --- END NEW COMPONENT ---
 
+// --- MAIN COMPONENT ---
 function OrganizationOverview() {
     const { id } = useParams();
     const [organization, setOrganization] = useState(null);
@@ -93,7 +96,7 @@ function OrganizationOverview() {
     const [uploadingProjectDoc, setUploadingProjectDoc] = useState(null);
     const [projectDocFiles, setProjectDocFiles] = useState([]);
     const [projectDocType, setProjectDocType] = useState('Other');
-    // New states for adding project
+    
     const [showAddProject, setShowAddProject] = useState(false);
     const [newProject, setNewProject] = useState({
         name: '',
@@ -109,7 +112,7 @@ function OrganizationOverview() {
 
     const fetchOrganization = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/organizations/${id}`);
+            const response = await axios.get(`${API_BASE_URL}/api/organizations/${id}`);
             setOrganization(response.data);
         } catch (err) {
             setError("Failed to fetch organization details.");
@@ -123,76 +126,47 @@ function OrganizationOverview() {
         fetchOrganization();
     }, [id]);
 
-    const handleEdit = () => {
-        navigate(`/dashboard/organizations/edit/${id}`);
-    };
+    const handleEdit = () => navigate(`/dashboard/organizations/edit/${id}`);
 
     const handleDelete = async () => {
-        if (window.confirm(`Are you sure you want to delete ${organization.name}? This will NOT delete associated projects or customers.`)) {
+        if (window.confirm(`Delete ${organization.name}? This action cannot be undone.`)) {
             try {
-                await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/organizations/${id}`);
+                await axios.delete(`${API_BASE_URL}/api/organizations/${id}`);
                 toast.success('Organization deleted successfully!');
                 navigate('/dashboard/organization'); 
             } catch (err) {
                 toast.error('Failed to delete organization.');
-                console.error("Error deleting organization:", err);
             }
         }
     };
 
     const handleProjectDocUpload = async (projectId) => {
-        if (!projectDocFiles.length) {
-            toast.error('Please select files to upload.');
-            return;
-        }
-        setUploadingProjectDoc(projectId);
-        try {
+         if (!projectDocFiles.length) return toast.error('Select files first.');
+         setUploadingProjectDoc(projectId);
+         try {
             const formData = new FormData();
             formData.append('documentType', projectDocType);
-            projectDocFiles.forEach(file => {
-                formData.append('files', file);
-            });
-
-            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/organizations/${id}/projects/${projectId}/documents`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-
-            toast.success('Documents added to project successfully!');
+            projectDocFiles.forEach(file => formData.append('files', file));
+            await axios.post(`${API_BASE_URL}/api/organizations/${id}/projects/${projectId}/documents`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            toast.success('Documents uploaded successfully');
             setProjectDocFiles([]);
             setProjectDocType('Other');
-            fetchOrganization(); // Refresh
-        } catch (err) {
-            toast.error('Failed to add documents to project.');
-            console.error(err);
-        } finally {
-            setUploadingProjectDoc(null);
-        }
+            fetchOrganization();
+         } catch(e) { 
+             console.error(e);
+             toast.error('Upload failed'); 
+         } finally { 
+             setUploadingProjectDoc(null); 
+         }
     };
 
-    const handleProjectFileChange = (e) => {
-        setProjectDocFiles(Array.from(e.target.files));
-    };
-
-    const removeProjectFile = (index) => {
-        setProjectDocFiles(prev => prev.filter((_, i) => i !== index));
-    };
-
-    // --- Handlers for projects ---
     const handleNewProjectChange = (e) => {
         const { name, value } = e.target;
         if (name.startsWith('contactPerson.')) {
             const field = name.split('.')[1];
-            setNewProject(prev => ({
-                ...prev,
-                contactPerson: { ...prev.contactPerson, [field]: value },
-            }));
+            setNewProject(prev => ({ ...prev, contactPerson: { ...prev.contactPerson, [field]: value } }));
         } else if (name === 'done' || name === 'todo') {
-            setNewProject(prev => ({
-                ...prev,
-                [name]: value.split('\n').filter(task => task.trim()),
-            }));
+            setNewProject(prev => ({ ...prev, [name]: value.split('\n').filter(t => t.trim()) }));
         } else {
             setNewProject(prev => ({ ...prev, [name]: value }));
         }
@@ -201,17 +175,10 @@ function OrganizationOverview() {
     const handleAddProject = async (e) => {
         e.preventDefault();
         setAddingProject(true);
-
-        // Validation
-        if (!newProject.name.trim() || !newProject.contactPerson.role.trim() || !newProject.contactPerson.name.trim()) {
-            toast.error('Please fill project name and contact role/name.');
-            setAddingProject(false);
-            return;
-        }
-
         try {
-            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/organizations/${id}/projects`, newProject);
-            toast.success('Project added successfully!');
+            await axios.post(`${API_BASE_URL}/api/organizations/${id}/projects`, newProject);
+            toast.success('Project initialized successfully');
+            // Reset form
             setNewProject({
                 name: '',
                 description: '',
@@ -222,559 +189,366 @@ function OrganizationOverview() {
                 contactPerson: { role: '', name: '', email: '', phone: '' },
             });
             setShowAddProject(false);
-            fetchOrganization(); // Refresh
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to add project.');
-            console.error(err);
-        } finally {
-            setAddingProject(false);
+            fetchOrganization();
+        } catch(e) { 
+            console.error(e);
+            toast.error('Failed to add project'); 
+        } finally { 
+            setAddingProject(false); 
         }
     };
 
     const handleDeleteProject = async (projectId) => {
-        if (window.confirm('Are you sure you want to delete this project?')) {
+        if(window.confirm('Are you sure you want to delete this project?')) {
             try {
-                await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/organizations/${id}/projects/${projectId}`);
-                toast.success('Project deleted successfully!');
-                fetchOrganization(); // Refresh
-            } catch (err) {
-                toast.error('Failed to delete project.');
-                console.error(err);
+                await axios.delete(`${API_BASE_URL}/api/organizations/${id}/projects/${projectId}`);
+                toast.success('Project deleted');
+                fetchOrganization();
+            } catch(e) { 
+                console.error(e);
+                toast.error('Deletion failed'); 
             }
         }
-    };
+    }
 
-    // --- Styles remain the same ---
+    const handleProjectFileChange = (e) => setProjectDocFiles(Array.from(e.target.files));
+    const removeProjectFile = (i) => setProjectDocFiles(prev => prev.filter((_, idx) => idx !== i));
+
+
+    if (loading) return (
+        <div className="flex items-center justify-center h-96">
+            <div className="flex flex-col items-center gap-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A90E2]"></div>
+                <span className="text-sm text-gray-500">Loading Profile...</span>
+            </div>
+        </div>
+    );
+    
+    if (error) return (
+        <div className="p-8 text-center">
+            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg inline-block border border-red-200">
+                {error}
+            </div>
+        </div>
+    );
+
     const statusStyle = {
-        'Active': 'bg-green-100 text-green-800',
-        'Inactive': 'bg-gray-100 text-gray-800',
-        'Lead': 'bg-yellow-100 text-yellow-800',
+        'Active': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        'Inactive': 'bg-gray-100 text-gray-800 border-gray-200',
+        'Lead': 'bg-amber-100 text-amber-800 border-amber-200',
     };
 
     const projectStatusStyle = {
-        'Initiated': 'bg-yellow-100 text-yellow-800',
-        'In Progress': 'bg-blue-100 text-blue-800',
-        'Completed': 'bg-green-100 text-green-800',
-        'On Hold': 'bg-gray-100 text-gray-800',
+        'Initiated': 'bg-amber-50 text-amber-700 border-amber-200',
+        'In Progress': 'bg-blue-50 text-blue-700 border-blue-200',
+        'Completed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'On Hold': 'bg-gray-50 text-gray-700 border-gray-200',
     };
 
-    const projectStatuses = ['Initiated', 'In Progress', 'Completed', 'On Hold'];
-
-    if (loading) {
-        return <div className="p-8 font-main text-center">Loading organization details...</div>;
-    }
-
-    if (error) {
-        return <div className="p-8 font-main text-center text-red-500">{error}</div>;
-    }
-
     return (
-        <div className="p-8 font-second">
-            {/* Header remains the same */}
-            <div className="flex justify-between items-center mb-6 border-b pb-4">
-                <h1 className="text-3xl font-bold font-main text-gray-800 flex items-center">
-                    <BuildingOffice2Icon className='h-8 w-8 mr-3 text-[#4A90E2]' />
-                    {organization.name}
-                </h1>
-                <div className="flex items-center space-x-2">
-                    <button onClick={handleEdit} title="Edit Organization" className="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                        <PencilIcon className="h-6 w-6 text-gray-400 hover:text-blue-500" />
-                    </button>
-                    <button onClick={handleDelete} title="Delete Organization" className="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                        <TrashIcon className="h-6 w-6 text-gray-400 hover:text-red-500" />
-                    </button>
+        <div className="p-6 max-w-7xl mx-auto font-second">
+            {/* Header Card */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+                    <div className="flex items-start gap-5">
+                        <div className="h-20 w-20 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 shadow-inner">
+                            <BuildingOffice2Icon className='h-10 w-10' />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold font-main text-gray-900">{organization.name}</h1>
+                            <div className="flex flex-wrap items-center gap-4 mt-3">
+                                <span className={`px-3 py-0.5 text-xs font-bold uppercase tracking-wide rounded-full border ${statusStyle[organization.status]}`}>
+                                    {organization.status}
+                                </span>
+                                <div className="flex items-center text-sm text-gray-500">
+                                    <MapPinIcon className='h-4 w-4 mr-1.5 text-gray-400' />
+                                    {organization.address || "No address on file"}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                        <button onClick={handleEdit} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#4A90E2] hover:border-[#4A90E2] transition-all shadow-sm">
+                            <PencilIcon className="h-4 w-4" /> Edit
+                        </button>
+                        <button onClick={handleDelete} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm">
+                            <TrashIcon className="h-4 w-4" /> Delete
+                        </button>
+                    </div>
                 </div>
             </div>
-         
-            <p className="text-gray-600 mb-8 flex items-center"><MapPinIcon className='h-5 w-5 mr-2' />{organization.address}</p>
 
-            {/* Tab Navigation remains the same */}
-            <div className="border-b border-gray-200 mb-6">
-                <nav className="-mb-px flex space-x-8">
-                    <button
-                        onClick={() => setActiveTab('overview')}
-                        className={`${
-                            activeTab === 'overview'
-                                ? 'border-[#4A90E2] text-[#4A90E2]'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-                    >
-                        Overview
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('contacts')}
-                        className={`${
-                            activeTab === 'contacts'
-                                ? 'border-[#4A90E2] text-[#4A90E2]'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-                    >
-                        Contacts ({organization.contactDetails.length})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('documents')}
-                        className={`${
-                            activeTab === 'documents'
-                                ? 'border-[#4A90E2] text-[#4A90E2]'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-                    >
-                        Organization Documents ({organization.documents.length})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('projects')}
-                        className={`${
-                            activeTab === 'projects'
-                                ? 'border-[#4A90E2] text-[#4A90E2]'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-                    >
-                        Projects ({organization.projects.length})
-                    </button>
+            {/* Tabs */}
+            <div className="mb-8 border-b border-gray-200">
+                <nav className="flex space-x-8">
+                    {['Overview', 'Contacts', 'Documents', 'Projects'].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab.toLowerCase())}
+                            className={`pb-4 px-1 text-sm font-medium border-b-2 transition-colors ${
+                                activeTab === tab.toLowerCase()
+                                    ? 'border-[#4A90E2] text-[#4A90E2]'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            {tab}
+                            {tab === 'Projects' && <span className="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">{organization.projects.length}</span>}
+                        </button>
+                    ))}
                 </nav>
             </div>
 
-            {/* Tab Content remains the same except for projects tab */}
-            <div className="space-y-8">
+            {/* Tab Content */}
+            <div className="min-h-[400px]">
+                
+                {/* --- OVERVIEW TAB --- */}
                 {activeTab === 'overview' && (
-                    // Overview tab unchanged
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div className="p-6 rounded-lg shadow-md bg-white">
-                            <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-800">
-                                <UsersIcon className="h-5 w-5 mr-2 text-[#4A90E2]" />
-                                Summary
-                            </h3>
-                            <div className="space-y-3">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Status:</span>
-                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyle[organization.status]}`}>
-                                        {organization.status}
-                                    </span>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Organization Stats</h3>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm text-gray-600">Total Projects</span>
+                                    <span className="text-lg font-bold text-gray-900">{organization.projects.length}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Total Projects:</span>
-                                    <span className="font-semibold">{organization.projects.length}</span>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm text-gray-600">Key Contacts</span>
+                                    <span className="text-lg font-bold text-gray-900">{organization.contactDetails.length}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Key Contacts:</span>
-                                    <span className="font-semibold">{organization.contactDetails.length}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Documents:</span>
-                                    <span className="font-semibold">{organization.documents.length}</span>
+                                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-sm text-gray-600">Documents</span>
+                                    <span className="text-lg font-bold text-gray-900">{organization.documents.length}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
 
+                {/* --- CONTACTS TAB --- */}
                 {activeTab === 'contacts' && (
-                    // Contacts tab unchanged
-                    <div className="p-6 rounded-lg shadow-md bg-white">
-                        <h2 className="text-xl font-semibold mb-4 flex items-center border-b pb-2"><UserIcon className="h-6 w-6 mr-2 text-[#4A90E2]" />Key Contacts ({organization.contactDetails.length})</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {organization.contactDetails.map((contact, index) => (
-                                <div key={index} className='p-6 border rounded-lg bg-gray-50 shadow-sm hover:shadow-md transition-shadow'>
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <p className="font-bold text-lg text-gray-800">{contact.name}</p>
-                                            <p className='text-sm text-gray-600 font-semibold mb-2'>{contact.role}</p>
-                                        </div>
-                                        <div className="flex flex-col space-y-1 text-xs text-gray-500">
-                                            <p className="flex items-center"><EnvelopeIcon className='h-3 w-3 mr-1' />{contact.email}</p>
-                                            <p className="flex items-center"><PhoneIcon className='h-3 w-3 mr-1' />{contact.phone}</p>
-                                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {organization.contactDetails.map((contact, index) => (
+                            <div key={index} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="h-10 w-10 rounded-full bg-[#4A90E2]/10 text-[#4A90E2] flex items-center justify-center border border-[#4A90E2]/20">
+                                        <UserIcon className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-900">{contact.name}</h4>
+                                        <p className="text-xs text-gray-500 uppercase font-semibold">{contact.role}</p>
                                     </div>
                                 </div>
-                            ))}
-                            {organization.contactDetails.length === 0 && <p className="text-sm text-gray-500 col-span-full">No key contacts listed.</p>}
-                        </div>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center text-gray-600 bg-gray-50 p-2 rounded border border-gray-100">
+                                        <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
+                                        {contact.email}
+                                    </div>
+                                    <div className="flex items-center text-gray-600 bg-gray-50 p-2 rounded border border-gray-100">
+                                        <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+                                        {contact.phone}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                         {organization.contactDetails.length === 0 && (
+                            <div className="col-span-full text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-500">
+                                No contacts listed for this organization.
+                            </div>
+                         )}
                     </div>
                 )}
 
+                {/* --- DOCUMENTS TAB --- */}
                 {activeTab === 'documents' && (
-                    // Documents tab unchanged
-                    <div className='p-6 rounded-lg shadow-md bg-white'>
-                        <h2 className="text-xl font-semibold mb-4 flex items-center border-b pb-2"><DocumentTextIcon className="h-6 w-6 mr-2 text-[#4A90E2]" />Organization Documents ({organization.documents.length})</h2>
-                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                            {organization.documents.length > 0 ? (
-                                organization.documents.map((doc, index) => (
-                                    <a key={index} href={`${import.meta.env.VITE_BACKEND_URL}${doc.url}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-start p-4 border rounded-lg hover:bg-gray-50 transition-colors hover:shadow-sm">
-                                        <div className="flex justify-between items-center w-full mb-2">
-                                            <p className='font-medium text-gray-800'>{doc.fileName}</p>
-                                            <span className={`px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800`}>
-                                                {doc.documentType}
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-gray-500">Click to view</p>
-                                    </a>
-                                ))
-                            ) : (
-                                <p className="text-sm text-gray-500 col-span-full">No organization documents uploaded.</p>
-                            )}
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {organization.documents.map((doc, index) => (
+                            <a key={index} href={`${API_BASE_URL}${doc.url}`} target="_blank" rel="noopener noreferrer" 
+                               className="flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-[#4A90E2] hover:shadow-sm transition-all group"
+                            >
+                                <div className="mr-4 p-2.5 bg-gray-100 rounded-lg text-gray-500 group-hover:bg-blue-50 group-hover:text-[#4A90E2] transition-colors">
+                                    <DocumentTextIcon className="h-6 w-6" />
+                                </div>
+                                <div className="overflow-hidden">
+                                    <p className="text-sm font-medium text-gray-900 truncate">{doc.fileName}</p>
+                                    <span className="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-500 mt-1 inline-block border border-gray-200">{doc.documentType}</span>
+                                </div>
+                            </a>
+                        ))}
+                         {organization.documents.length === 0 && (
+                            <div className="col-span-full text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-500">
+                                <FolderOpenIcon className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                                No organization-level documents found.
+                            </div>
+                         )}
                     </div>
                 )}
 
+                {/* --- PROJECTS TAB --- */}
                 {activeTab === 'projects' && (
-                    <div className='space-y-6'>
+                    <div className="space-y-8">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-semibold flex items-center border-b pb-2"><BriefcaseIcon className="h-6 w-6 mr-2 text-[#4A90E2]" />Projects ({organization.projects.length})</h2>
-                            <button 
-                                onClick={() => setShowAddProject(!showAddProject)} 
-                                className="flex items-center text-[#4A90E2] hover:text-[#3A7BBE] text-sm font-medium transition-colors"
-                            >
-                                <PlusIcon className="h-4 w-4 mr-1" /> {showAddProject ? 'Cancel' : 'Add Project'}
+                            <h3 className="text-lg font-bold text-gray-900">Active Projects</h3>
+                            <button onClick={() => setShowAddProject(!showAddProject)} className="text-sm font-medium text-white bg-[#4A90E2] hover:bg-[#357ABD] px-4 py-2 rounded-lg shadow-sm flex items-center transition-colors">
+                                <PlusIcon className="h-4 w-4 mr-2" /> {showAddProject ? 'Cancel Creation' : 'Initiate Project'}
                             </button>
                         </div>
 
-                        {/* New Project Form (toggleable) - Improved layout for better flow */}
                         {showAddProject && (
-                            <div className="border p-6 rounded-lg bg-gray-50 space-y-6">
-                                <h3 className="text-xl font-medium text-gray-700 flex items-center">
-                                    <PlusIcon className="h-5 w-5 mr-2 text-[#4A90E2]" />
-                                    Add New Project
-                                </h3>
-                                <form onSubmit={handleAddProject} className="space-y-6">
+                            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-6 animate-fadeIn">
+                                <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">New Project Parameters</h4>
+                                <form onSubmit={handleAddProject} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
-                                            <input 
-                                                type="text" 
-                                                name="name" 
-                                                required 
-                                                value={newProject.name} 
-                                                onChange={handleNewProjectChange} 
-                                                placeholder="Enter project name"
-                                                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm"
-                                            />
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Project Name</label>
+                                            <input className="block w-full p-2.5 rounded-lg border-gray-300 shadow-sm focus:border-[#4A90E2] focus:ring-[#4A90E2] sm:text-sm" placeholder="e.g. Q3 Marketing Campaign" name="name" value={newProject.name} onChange={handleNewProjectChange} required />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                            <select 
-                                                name="status" 
-                                                value={newProject.status} 
-                                                onChange={handleNewProjectChange} 
-                                                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm"
-                                            >
-                                                {projectStatuses.map(s => <option key={s}>{s}</option>)}
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Description</label>
+                                            <input className="block w-full p-2.5 rounded-lg border-gray-300 shadow-sm focus:border-[#4A90E2] focus:ring-[#4A90E2] sm:text-sm" placeholder="Brief objective..." name="description" value={newProject.description} onChange={handleNewProjectChange} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                                            <select className="block w-full p-2.5 rounded-lg border-gray-300 shadow-sm focus:border-[#4A90E2] focus:ring-[#4A90E2] sm:text-sm" name="status" value={newProject.status} onChange={handleNewProjectChange}>
+                                                {['Initiated', 'In Progress', 'On Hold', 'Completed'].map(s => <option key={s}>{s}</option>)}
                                             </select>
                                         </div>
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                        <textarea 
-                                            rows="3" 
-                                            name="description" 
-                                            value={newProject.description} 
-                                            onChange={handleNewProjectChange} 
-                                            placeholder="Brief description of the project"
-                                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Current Stage</label>
-                                        <input 
-                                            type="text" 
-                                            name="currentStage" 
-                                            value={newProject.currentStage} 
-                                            onChange={handleNewProjectChange} 
-                                            placeholder="e.g., Planning, Development"
-                                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Done Tasks (one per line)</label>
-                                            <textarea 
-                                                rows="4" 
-                                                name="done" 
-                                                value={newProject.done.join('\n')} 
-                                                onChange={handleNewProjectChange} 
-                                                placeholder="List completed tasks&#10;One task per line"
-                                                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm resize-none"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">To Do Tasks (one per line)</label>
-                                            <textarea 
-                                                rows="4" 
-                                                name="todo" 
-                                                value={newProject.todo.join('\n')} 
-                                                onChange={handleNewProjectChange} 
-                                                placeholder="List pending tasks&#10;One task per line"
-                                                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm resize-none"
-                                            />
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Current Stage</label>
+                                            <input className="block w-full p-2.5 rounded-lg border-gray-300 shadow-sm focus:border-[#4A90E2] focus:ring-[#4A90E2] sm:text-sm" placeholder="e.g. Requirement Gathering" name="currentStage" value={newProject.currentStage} onChange={handleNewProjectChange} />
                                         </div>
                                     </div>
-                                    <div className="md:col-span-2">
-                                        <h4 className="text-sm font-semibold mb-3 text-gray-800 flex items-center">
-                                            <UserIcon className="h-4 w-4 mr-1 text-[#4A90E2]" />
-                                            Project Contact Person
-                                        </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-700 mb-1">Role *</label>
-                                                <input 
-                                                    type="text" 
-                                                    name="contactPerson.role" 
-                                                    required 
-                                                    value={newProject.contactPerson.role} 
-                                                    onChange={handleNewProjectChange} 
-                                                    placeholder="e.g., Project Manager"
-                                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm text-xs"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-700 mb-1">Name *</label>
-                                                <input 
-                                                    type="text" 
-                                                    name="contactPerson.name" 
-                                                    required 
-                                                    value={newProject.contactPerson.name} 
-                                                    onChange={handleNewProjectChange} 
-                                                    placeholder="Full name"
-                                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm text-xs"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
-                                                <input 
-                                                    type="email" 
-                                                    name="contactPerson.email" 
-                                                    value={newProject.contactPerson.email} 
-                                                    onChange={handleNewProjectChange} 
-                                                    placeholder="user@example.com"
-                                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm text-xs"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
-                                                <input 
-                                                    type="tel" 
-                                                    name="contactPerson.phone" 
-                                                    value={newProject.contactPerson.phone} 
-                                                    onChange={handleNewProjectChange} 
-                                                    placeholder="+1 (555) 123-4567"
-                                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm text-xs"
-                                                />
-                                            </div>
+                                    
+                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                        <h5 className="text-xs font-bold text-gray-500 uppercase mb-3">Project Lead Contact</h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <input className="p-2 rounded border-gray-300 text-sm" placeholder="Role" name="contactPerson.role" value={newProject.contactPerson.role} onChange={handleNewProjectChange} required />
+                                            <input className="p-2 rounded border-gray-300 text-sm" placeholder="Name" name="contactPerson.name" value={newProject.contactPerson.name} onChange={handleNewProjectChange} required />
+                                            <input className="p-2 rounded border-gray-300 text-sm" placeholder="Email" name="contactPerson.email" value={newProject.contactPerson.email} onChange={handleNewProjectChange} />
+                                            <input className="p-2 rounded border-gray-300 text-sm" placeholder="Phone" name="contactPerson.phone" value={newProject.contactPerson.phone} onChange={handleNewProjectChange} />
                                         </div>
                                     </div>
-                                    <div className="flex justify-end space-x-3 pt-4">
-                                        <button 
-                                            type="button" 
-                                            onClick={() => setShowAddProject(false)} 
-                                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-300 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button 
-                                            type="submit" 
-                                            disabled={addingProject}
-                                            className="px-6 py-2 text-sm font-medium text-white bg-[#4A90E2] rounded-md hover:bg-[#3A7BBE] disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#4A90E2]/50 transition-colors"
-                                        >
-                                            {addingProject ? 'Adding...' : 'Add Project'}
+                                    
+                                    <div className="flex justify-end">
+                                        <button disabled={addingProject} className="px-6 py-2.5 bg-[#4A90E2] text-white text-sm font-medium rounded-lg hover:bg-[#357ABD] shadow-sm transition-colors">
+                                            {addingProject ? 'Creating Project...' : 'Initialize Project'}
                                         </button>
                                     </div>
                                 </form>
                             </div>
                         )}
 
-                        {/* Existing Projects List - Improved card layout for better readability */}
                         <div className="grid grid-cols-1 gap-6">
                             {organization.projects.map((project) => (
-                                <div key={project._id} className="border rounded-xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
-                                    {/* Header with delete button */}
-                                    <div className="relative p-6 border-b bg-gradient-to-r from-gray-50 to-white">
-                                        <button
-                                            onClick={() => handleDeleteProject(project._id)}
-                                            title="Delete Project"
-                                            className="absolute top-4 right-4 p-2 rounded-full hover:bg-red-50 transition-colors z-10"
-                                        >
-                                            <TrashIcon className="h-5 w-5 text-red-400 hover:text-red-600" />
+                                <div key={project._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+                                    {/* Project Header */}
+                                    <div className="p-5 border-b border-gray-100 bg-gray-50/30 flex justify-between items-start">
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <h4 className="text-lg font-bold text-gray-900">{project.name}</h4>
+                                                <span className={`px-2.5 py-0.5 text-[10px] uppercase font-bold rounded-full border ${projectStatusStyle[project.status]}`}>
+                                                    {project.status}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-500 max-w-2xl">{project.description || "No description provided."}</p>
+                                        </div>
+                                        <button onClick={() => handleDeleteProject(project._id)} className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Delete Project">
+                                            <TrashIcon className="h-4 w-4" />
                                         </button>
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex-1 pr-8">
-                                                <h3 className="text-xl font-bold text-gray-800 mb-1">{project.name}</h3>
-                                                <p className="text-sm text-gray-600 mb-3">{project.description || 'No description provided.'}</p>
-                                                <div className="flex items-center space-x-4">
-                                                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${projectStatusStyle[project.status]}`}>
-                                                        {project.status}
-                                                    </span>
-                                                    <span className="text-sm text-gray-500">Stage: {project.currentStage}</span>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
 
-                                    {/* Body: Tasks and Contact */}
-                                    <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                        <div className="lg:col-span-2 space-y-6">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="space-y-3">
-                                                    <h4 className="font-medium text-gray-700 mb-3 flex items-center text-base">
-                                                        <CheckCircleIcon className="h-4 w-4 mr-1 text-green-500" /> 
-                                                        Completed Tasks ({project.done.length})
-                                                    </h4>
-                                                    <ul className="space-y-2 text-sm text-gray-600 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-lg">
-                                                        {project.done.map((task, tIndex) => (
-                                                            <li key={tIndex} className="flex items-start p-3 bg-white rounded-md shadow-sm border-l-4 border-green-200">
-                                                                <span className="flex-1 break-words text-gray-800">{task}</span>
-                                                            </li>
-                                                        ))}
-                                                        {project.done.length === 0 && <li className="text-gray-400 italic p-3">Nothing completed yet.</li>}
-                                                    </ul>
-                                                </div>
-                                                <div className="space-y-3">
-                                                    <h4 className="font-medium text-gray-700 mb-3 flex items-center text-base">
-                                                        <ExclamationTriangleIcon className="h-4 w-4 mr-1 text-yellow-500" /> 
-                                                        Pending Tasks ({project.todo.length})
-                                                    </h4>
-                                                    <ul className="space-y-2 text-sm text-gray-600 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-lg">
-                                                        {project.todo.map((task, tIndex) => (
-                                                            <li key={tIndex} className="flex items-start p-3 bg-white rounded-md shadow-sm border-l-4 border-yellow-200">
-                                                                <span className="flex-1 break-words text-gray-800">{task}</span>
-                                                            </li>
-                                                        ))}
-                                                        {project.todo.length === 0 && <li className="text-gray-400 italic p-3">No tasks pending.</li>}
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-                                                <h4 className="font-medium text-gray-700 mb-3 flex items-center">Contact</h4>
-                                                <div className="space-y-2 text-sm">
-                                                    <p className="font-semibold text-gray-900 flex items-center">
-                                                        <UserIcon className="h-3 w-3 mr-2 text-[#4A90E2]" />
-                                                        {project.contactPerson.name}
-                                                    </p>
-                                                    <p className="text-gray-600 text-xs flex items-center">
-                                                        <BriefcaseIcon className="h-3 w-3 mr-2 text-gray-400" />
-                                                        {project.contactPerson.role}
-                                                    </p>
-                                                    <p className="text-gray-500 text-xs flex items-center">
-                                                        <EnvelopeIcon className="h-3 w-3 mr-2 text-gray-400" />
-                                                        {project.contactPerson.email}
-                                                    </p>
-                                                    <p className="text-gray-500 text-xs flex items-center">
-                                                        <PhoneIcon className="h-3 w-3 mr-2 text-gray-400" />
-                                                        {project.contactPerson.phone}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Project Documents Section */}
-                                    <div className="p-6 border-t bg-gray-50">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h4 className="font-medium text-gray-700 flex items-center">
-                                                <DocumentTextIcon className="h-4 w-4 mr-1 text-[#4A90E2]" /> 
-                                                Project Documents ({project.documents.length})
-                                            </h4>
-                                            <button 
-                                                onClick={() => setUploadingProjectDoc(uploadingProjectDoc === project._id ? null : project._id)} 
-                                                className="text-sm text-[#4A90E2] hover:underline flex items-center transition-colors"
-                                            >
-                                                <PlusIcon className="h-3 w-3 mr-1" /> 
-                                                {uploadingProjectDoc === project._id ? 'Cancel' : 'Add Document'}
-                                            </button>
-                                        </div>
-                                        <div className='grid grid-cols-1 gap-3 mb-4'>
-                                            {project.documents.length > 0 ? (
-                                                project.documents.map((doc, dIndex) => (
-                                                    <a key={dIndex} href={`${import.meta.env.VITE_BACKEND_URL}${doc.url}`} target="_blank" rel="noopener noreferrer" className="flex justify-between items-center p-3 border rounded-lg hover:bg-white text-sm transition-all duration-200 hover:shadow-sm">
-                                                        <span className='truncate font-medium flex items-center'>
-                                                            <DocumentTextIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
-                                                            {doc.fileName}
-                                                        </span>
-                                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800`}>
-                                                            {doc.documentType}
-                                                        </span>
-                                                    </a>
-                                                ))
-                                            ) : (
-                                                <p className="text-sm text-gray-500 italic">No documents yet. Add some above!</p>
-                                            )}
-                                        </div>
-
-                                        {/* Upload Form - Improved with better spacing */}
-                                        {uploadingProjectDoc === project._id && (
-                                            <div className="space-y-3 pt-4 border-t rounded-lg bg-white p-4">
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Document Type</label>
-                                                    <select 
-                                                        value={projectDocType} 
-                                                        onChange={(e) => setProjectDocType(e.target.value)}
-                                                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#4A90E2] focus:border-[#4A90E2] sm:text-sm text-xs"
-                                                    >
-                                                        {['UAT', 'PROD', 'Contract', 'Invoice', 'SOW', 'Other'].map(type => (
-                                                            <option key={type}>{type}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Select Files</label>
-                                                    <input 
-                                                        type="file" 
-                                                        multiple 
-                                                        onChange={handleProjectFileChange} 
-                                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#E6F0FA] file:text-[#4A90E2]"
-                                                    />
-                                                </div>
-                                                {projectDocFiles.length > 0 && (
-                                                    <div className="space-y-1 max-h-24 overflow-y-auto border rounded-md p-2 bg-white">
-                                                        {projectDocFiles.map((file, fIndex) => (
-                                                            <div key={fIndex} className="flex justify-between items-center text-xs p-2 bg-gray-100 rounded-md">
-                                                                <span className="truncate flex-1 mr-2">{file.name}</span>
-                                                                <button onClick={() => removeProjectFile(fIndex)} className="text-red-500 hover:text-red-700 p-1 rounded">
-                                                                    <TrashIcon className="h-3 w-3" />
-                                                                </button>
-                                                            </div>
-                                                        ))}
+                                    <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        {/* Column 1: Status & Contact */}
+                                        <div className="space-y-5">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Execution Status</p>
+                                                <div className="space-y-2 bg-white">
+                                                    <div className="flex items-start gap-2 text-sm p-2 rounded border border-green-100 bg-green-50/50">
+                                                        <CheckCircleIcon className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                                                        <div className='text-gray-700'>
+                                                            <span className="font-semibold text-green-700">Completed:</span> 
+                                                            <span className="ml-1">{project.done.length > 0 ? project.done.join(', ') : 'No tasks completed'}</span>
+                                                        </div>
                                                     </div>
-                                                )}
-                                                <button 
-                                                    onClick={() => handleProjectDocUpload(project._id)}
-                                                    disabled={projectDocFiles.length === 0}
-                                                    className="w-full px-4 py-2 bg-[#4A90E2] text-white text-sm rounded-md hover:bg-[#3A7BBE] disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#4A90E2]/50 transition-colors"
-                                                >
-                                                    {uploadingProjectDoc === project._id && projectDocFiles.length > 0 ? 'Uploading...' : 'Upload Documents'}
+                                                    <div className="flex items-start gap-2 text-sm p-2 rounded border border-amber-100 bg-amber-50/50">
+                                                        <ExclamationTriangleIcon className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                                                        <div className='text-gray-700'>
+                                                            <span className="font-semibold text-amber-700">Pending:</span> 
+                                                            <span className="ml-1">{project.todo.length > 0 ? project.todo.join(', ') : 'No pending tasks'}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Project Lead</p>
+                                                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                                    <div className="h-8 w-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500">
+                                                        <UserIcon className="h-4 w-4" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-900">{project.contactPerson.name}</p>
+                                                        <p className="text-xs text-gray-500">{project.contactPerson.role}</p>
+                                                    </div>
+                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Column 2: Documents */}
+                                        <div className="lg:col-span-1 border-l border-gray-100 pl-6 lg:border-l">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Documents</p>
+                                                <button onClick={() => setUploadingProjectDoc(uploadingProjectDoc === project._id ? null : project._id)} className="text-xs text-[#4A90E2] hover:text-[#357ABD] font-semibold hover:underline">
+                                                    {uploadingProjectDoc === project._id ? 'Cancel' : '+ Upload New'}
                                                 </button>
                                             </div>
-                                        )}
-                                    </div>
-                                    
-                                    {/* --- NEW INVOICING SECTION --- */}
-                                    <div className="p-6 border-t bg-gray-50">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h4 className="font-medium text-gray-700 flex items-center">
-                                                <CurrencyDollarIcon className="h-4 w-4 mr-1 text-green-500" /> 
-                                                Invoices
-                                            </h4>
-                                            <button 
-                                                onClick={() => navigate(`/dashboard/organizations/${id}/projects/${project._id}/invoice/new`)} 
-                                                className="text-sm text-green-600 hover:underline flex items-center transition-colors"
-                                            >
-                                                <PlusIcon className="h-3 w-3 mr-1" /> Create Invoice
-                                            </button>
+                                            
+                                            {uploadingProjectDoc === project._id && (
+                                                <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 animate-fadeIn">
+                                                    <input type="file" multiple onChange={handleProjectFileChange} className="block w-full text-xs text-gray-500 mb-2 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-white file:text-blue-500 hover:file:bg-blue-100"/>
+                                                    <select className="block w-full text-xs p-1.5 mb-2 border border-blue-200 rounded bg-white text-gray-700 focus:outline-none focus:border-blue-400" value={projectDocType} onChange={(e) => setProjectDocType(e.target.value)}>
+                                                        {['UAT', 'PROD', 'Contract', 'Invoice', 'Other'].map(t => <option key={t}>{t}</option>)}
+                                                    </select>
+                                                    <button onClick={() => handleProjectDocUpload(project._id)} className="w-full bg-[#4A90E2] text-white text-xs py-1.5 rounded font-medium hover:bg-[#357ABD] transition-colors">Confirm Upload</button>
+                                                </div>
+                                            )}
+
+                                            <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                                {project.documents.length > 0 ? project.documents.map((doc, i) => (
+                                                    <a key={i} href={`${API_BASE_URL}${doc.url}`} target="_blank" className="flex items-center p-2.5 rounded-lg bg-white border border-gray-200 hover:border-[#4A90E2] hover:shadow-sm transition-all group">
+                                                        <DocumentTextIcon className="h-4 w-4 mr-2 text-gray-400 group-hover:text-[#4A90E2]" />
+                                                        <span className="truncate flex-1 text-xs font-medium text-gray-700">{doc.fileName}</span>
+                                                        <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded ml-2 uppercase font-semibold">{doc.documentType}</span>
+                                                        <ArrowDownTrayIcon className="h-3 w-3 text-gray-300 ml-2 opacity-0 group-hover:opacity-100" />
+                                                    </a>
+                                                )) : <div className="text-xs text-gray-400 italic p-2 text-center border border-dashed border-gray-200 rounded bg-gray-50">No documents attached</div>}
+                                            </div>
                                         </div>
-                                        
-                                        <InvoiceList projectId={project._id} orgId={id} navigate={navigate} organizationName={organization.name} /> 
+
+                                        {/* Column 3: Invoicing */}
+                                        <div className="lg:col-span-1 border-l border-gray-100 pl-6">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                                                    Financials
+                                                </p>
+                                                <button 
+                                                    onClick={() => navigate(`/dashboard/organizations/${id}/projects/${project._id}/invoice/new`)}
+                                                    className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-1 rounded border border-emerald-100 font-bold hover:bg-emerald-100 transition-colors flex items-center gap-1"
+                                                >
+                                                    <PlusIcon className="h-3 w-3" /> Invoice
+                                                </button>
+                                            </div>
+                                            <InvoiceList projectId={project._id} orgId={id} navigate={navigate} />
+                                        </div>
                                     </div>
-                                    {/* --- END NEW INVOICING SECTION --- */}
                                 </div>
                             ))}
-                            {organization.projects.length === 0 && !showAddProject && (
-                                <div className="text-center py-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                                    <BriefcaseIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium text-gray-700 mb-2">No Projects Yet</h3>
-                                    <p className="text-sm text-gray-500">Get started by adding your first project above!</p>
+                             {organization.projects.length === 0 && !showAddProject && (
+                                <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                    <BriefcaseIcon className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                                    <p className="text-gray-500 font-medium">No active projects associated with this organization.</p>
                                 </div>
-                            )}
+                             )}
                         </div>
                     </div>
                 )}
