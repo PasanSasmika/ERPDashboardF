@@ -6,7 +6,7 @@ const ChartSection = () => {
     const [chartData, setChartData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [timeRange, setTimeRange] = useState('12M'); // UI state only
+    const [timeRange, setTimeRange] = useState('12M'); 
 
     useEffect(() => {
         const fetchProjects = async () => {
