@@ -146,7 +146,7 @@ const DashboardContent = () => {
     useEffect(() => {
         const fetchAllData = async () => {
             try {
-                const allProjectsResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/projects`);
+                const allProjectsResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}api/projects`);
                 const allProjects = allProjectsResponse.data;
 
                 const counts = allProjects.reduce((acc, project) => {
@@ -161,7 +161,7 @@ const DashboardContent = () => {
                 const bookmarkedProjectsData = allProjects.filter(project => favoriteProjectIds.includes(project._id));
                 setFavoriteProjects(bookmarkedProjectsData);
 
-                const resourceResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/resources`);
+                const resourceResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}api/resources`);
                 const allResources = resourceResponse.data;
                 const savedResourcesData = allResources.filter(resource => favoriteResourceIds.includes(resource._id));
                 setSavedResources(savedResourcesData);

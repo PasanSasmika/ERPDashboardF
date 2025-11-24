@@ -90,7 +90,7 @@ function Addproject() {
     }
 
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/projects`, formData, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}api/projects`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
       });
       setLoading(false);

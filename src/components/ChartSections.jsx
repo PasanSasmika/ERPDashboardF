@@ -11,7 +11,7 @@ const ChartSection = () => {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/projects`);
+                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}api/projects`);
                 const projects = response.data;
 
                 const months = [];

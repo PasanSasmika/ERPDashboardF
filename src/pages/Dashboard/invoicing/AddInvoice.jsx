@@ -39,11 +39,11 @@ function AddInvoice() {
         const fetchOrganizationAndInvoice = async () => {
             try {
                 // Fetch Organization (needed for name/address in the form)
-                const orgResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/organizations/${orgId}`);
+                const orgResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}api/organizations/${orgId}`);
                 setOrganization(orgResponse.data);
 
                 if (isEditMode) {
-                    const invoiceResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/invoices/${invoiceId}`);
+                    const invoiceResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}api/invoices/${invoiceId}`);
                     const inv = invoiceResponse.data;
                     setInvoiceData({
                         ...inv,
@@ -130,8 +130,8 @@ function AddInvoice() {
         }
 
         const apiEndpoint = isEditMode 
-            ? `${import.meta.env.VITE_BACKEND_URL}/api/invoices/${invoiceId}`
-            : `${import.meta.env.VITE_BACKEND_URL}/api/invoices`;
+            ? `${import.meta.env.VITE_BACKEND_URL}api/invoices/${invoiceId}`
+            : `${import.meta.env.VITE_BACKEND_URL}api/invoices`;
         const method = isEditMode ? axios.put : axios.post;
 
         try {

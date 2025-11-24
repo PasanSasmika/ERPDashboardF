@@ -46,7 +46,7 @@ function InvoicePreview() {
         const fetchInvoice = async () => {
             try {
                 const response = await axios.get(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/invoices/${invoiceId}`
+                    `${import.meta.env.VITE_BACKEND_URL}api/invoices/${invoiceId}`
                 );
                 const invoiceData = response.data;
                 setInvoice(invoiceData);
@@ -130,7 +130,7 @@ function InvoicePreview() {
 
         try {
             await axios.delete(
-                `${import.meta.env.VITE_BACKEND_URL}/api/invoices/${invoiceId}`
+                `${import.meta.env.VITE_BACKEND_URL}api/invoices/${invoiceId}`
             );
             toast.success('Invoice deleted successfully!');
             // Navigate with fallback

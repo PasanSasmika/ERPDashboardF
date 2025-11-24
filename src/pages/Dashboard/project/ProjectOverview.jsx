@@ -30,7 +30,7 @@ function ProjectOverview() {
 
     const fetchProject = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/projects`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}api/projects`);
         const foundProject = response.data.find(p => p._id === id);
         if (foundProject) {
           setProject(foundProject);
@@ -71,7 +71,7 @@ function ProjectOverview() {
   const handleDelete = async () => {
     if (window.confirm(`Are you sure you want to delete ${project.name}?`)) {
       try {
-        await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/projects/${id}`);
+        await axios.delete(`${import.meta.env.VITE_BACKEND_URL}api/projects/${id}`);
         toast.success("Project deleted successfully!");
         navigate('/dashboard/projects'); 
       } catch (err) {

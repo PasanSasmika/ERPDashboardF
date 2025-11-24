@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use the environment variable + /api suffix
-const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api`;
+const API_URL = `${import.meta.env.VITE_BACKEND_URL}api`;
 
 // --- General Ledger ---
 export const getAccounts = async () => {
