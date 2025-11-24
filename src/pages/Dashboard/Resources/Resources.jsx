@@ -5,8 +5,7 @@ import { PlusIcon, TrashIcon, FolderIcon, DocumentIcon, ChevronRightIcon } from 
 import toast from 'react-hot-toast';
 
 // NOTE: In your local Vite project, replace this with import.meta.env.VITE_BACKEND_URL
-const API_BASE_URL = "http://localhost:5000";
-
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 function Resources() {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);

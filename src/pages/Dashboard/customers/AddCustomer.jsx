@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { UserPlusIcon, BuildingOfficeIcon, UserIcon } from '@heroicons/react/24/solid';
 
 // NOTE: In your local Vite project, replace this with import.meta.env.VITE_BACKEND_URL
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL ;
 
 function Addcustomer() {
   const navigate = useNavigate();

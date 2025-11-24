@@ -5,7 +5,7 @@ import { PlusIcon, ArrowRightIcon } from "@heroicons/react/24/solid";
 import { UserIcon, BuildingOffice2Icon, PhoneIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 // NOTE: In your local Vite project, replace this with import.meta.env.VITE_BACKEND_URL
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL ;
 
 function Customer() {
   const [customers, setCustomers] = useState([]);

@@ -21,8 +21,7 @@ import {
 } from "@heroicons/react/24/solid";
 
 // NOTE: In your local Vite project, replace this with import.meta.env.VITE_BACKEND_URL
-const API_BASE_URL = "http://localhost:5000";
-
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 // --- SUB-COMPONENT: INVOICE LIST ---
 const InvoiceList = ({ projectId, orgId, navigate }) => {
     const [invoices, setInvoices] = useState([]);

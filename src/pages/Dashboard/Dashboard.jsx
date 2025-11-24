@@ -45,8 +45,7 @@ import ChartOfAccounts from "./finance/ChartOfAccounts";
 import EmployeeManagement from "./hr/EmployeeManagement";
 import ExpenseManagement from "./hr/ExpenseManagement";
 
-const API_BASE_URL = "http://localhost:5000";
-
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL ; 
 function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); 
   const [user, setUser] = useState(null);
