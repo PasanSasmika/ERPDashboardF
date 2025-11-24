@@ -82,7 +82,7 @@ function Dashboard() {
       setIsSearching(true);
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/api/search?q=${encodeURIComponent(searchQuery.trim())}`
+          `${API_BASE_URL}api/search?q=${encodeURIComponent(searchQuery.trim())}`
         );
         setSearchResults(response.data);
       } catch (err) {

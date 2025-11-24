@@ -35,7 +35,7 @@ function AddResources() {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/api/resources`, formData, {
+      await axios.post(`${API_BASE_URL}api/resources`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
       });
       setLoading(false);

@@ -27,7 +27,7 @@ function ResourceOverview() {
 
     const fetchResource = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/resources/${id}`);
+        const response = await axios.get(`${API_BASE_URL}api/resources/${id}`);
         const foundResource = response.data;
         if (foundResource) {
           setResource(foundResource);
@@ -63,7 +63,7 @@ function ResourceOverview() {
   const handleDelete = async () => {
     if (window.confirm(`Are you sure you want to delete ${resource.name}?`)) {
       try {
-        await axios.delete(`${API_BASE_URL}/api/resources/${id}`);
+        await axios.delete(`${API_BASE_URL}api/resources/${id}`);
         toast.success("Resource deleted successfully!");
         navigate('/dashboard/resources'); 
       } catch (err) {

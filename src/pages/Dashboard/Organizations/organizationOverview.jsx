@@ -31,7 +31,7 @@ const InvoiceList = ({ projectId, orgId, navigate }) => {
         const fetchInvoices = async () => {
             setInvLoading(true);
             try {
-                const response = await axios.get(`${API_BASE_URL}/api/invoices/organization/${orgId}/project/${projectId}`);
+                const response = await axios.get(`${API_BASE_URL}api/invoices/organization/${orgId}/project/${projectId}`);
                 setInvoices(response.data);
             } catch (err) {
                 console.error("Failed to fetch invoices:", err);
@@ -111,7 +111,7 @@ function OrganizationOverview() {
 
     const fetchOrganization = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/api/organizations/${id}`);
+            const response = await axios.get(`${API_BASE_URL}api/organizations/${id}`);
             setOrganization(response.data);
         } catch (err) {
             setError("Failed to fetch organization details.");
@@ -130,7 +130,7 @@ function OrganizationOverview() {
     const handleDelete = async () => {
         if (window.confirm(`Delete ${organization.name}? This action cannot be undone.`)) {
             try {
-                await axios.delete(`${API_BASE_URL}/api/organizations/${id}`);
+                await axios.delete(`${API_BASE_URL}api/organizations/${id}`);
                 toast.success('Organization deleted successfully!');
                 navigate('/dashboard/organization'); 
             } catch (err) {
@@ -146,7 +146,7 @@ function OrganizationOverview() {
             const formData = new FormData();
             formData.append('documentType', projectDocType);
             projectDocFiles.forEach(file => formData.append('files', file));
-            await axios.post(`${API_BASE_URL}/api/organizations/${id}/projects/${projectId}/documents`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            await axios.post(`${API_BASE_URL}api/organizations/${id}/projects/${projectId}/documents`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
             toast.success('Documents uploaded successfully');
             setProjectDocFiles([]);
             setProjectDocType('Other');
@@ -175,7 +175,7 @@ function OrganizationOverview() {
         e.preventDefault();
         setAddingProject(true);
         try {
-            await axios.post(`${API_BASE_URL}/api/organizations/${id}/projects`, newProject);
+            await axios.post(`${API_BASE_URL}api/organizations/${id}/projects`, newProject);
             toast.success('Project initialized successfully');
             // Reset form
             setNewProject({
@@ -200,7 +200,7 @@ function OrganizationOverview() {
     const handleDeleteProject = async (projectId) => {
         if(window.confirm('Are you sure you want to delete this project?')) {
             try {
-                await axios.delete(`${API_BASE_URL}/api/organizations/${id}/projects/${projectId}`);
+                await axios.delete(`${API_BASE_URL}api/organizations/${id}/projects/${projectId}`);
                 toast.success('Project deleted');
                 fetchOrganization();
             } catch(e) { 

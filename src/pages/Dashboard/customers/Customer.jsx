@@ -16,7 +16,7 @@ function Customer() {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/customers/`);
+        const response = await axios.get(`${API_BASE_URL}api/customers/`);
         setCustomers(response.data);
       } catch (err) {
         setError("Failed to fetch customers.");

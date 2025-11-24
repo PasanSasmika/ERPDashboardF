@@ -31,7 +31,7 @@ function Addcustomer() {
     setError('');
 
     try {
-      await axios.post(`${API_BASE_URL}/api/customers`, customerData);
+      await axios.post(`${API_BASE_URL}api/customers`, customerData);
       setLoading(false);
       navigate('/dashboard/customers');
       toast.success('Customer added successfully!');

@@ -22,7 +22,7 @@ function EditOrganization() {
   useEffect(() => {
     const fetchOrganization = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/organizations/${id}`);
+        const response = await axios.get(`${API_BASE_URL}api/organizations/${id}`);
         const { name, address, status, contactDetails } = response.data;
         const normalizedContacts = contactDetails.map(contact => ({
           ...contact,
@@ -80,7 +80,7 @@ function EditOrganization() {
 
     try {
       const { projects, documents, ...updateData } = organizationData;
-      await axios.put(`${API_BASE_URL}/api/organizations/${id}`, updateData);
+      await axios.put(`${API_BASE_URL}api/organizations/${id}`, updateData);
       
       setLoading(false);
       navigate(`/dashboard/organizations/${id}`);

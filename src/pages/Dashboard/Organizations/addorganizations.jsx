@@ -70,7 +70,7 @@ function AddOrganization() {
         formData.append('files', file); 
       });
 
-      await axios.post(`${API_BASE_URL}/api/organizations`, formData, {
+      await axios.post(`${API_BASE_URL}api/organizations`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
