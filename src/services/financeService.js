@@ -1,48 +1,52 @@
 import axios from 'axios';
 
-// Use the environment variable + /api suffix
-const API_URL = `${import.meta.env.VITE_BACKEND_URL}api`;
+// Use environment variable or fallback
+const API_URL = import.meta.env.VITE_BACKEND_URL ;
 
-// --- General Ledger ---
-export const getAccounts = async () => {
-  const response = await axios.get(`${API_URL}/finance/accounts`);
+// --- FINANCE (Simple Cash Flow) ---
+
+// Add Record (Incoming or Outgoing)
+export const addFinanceRecord = async (recordData) => {
+  // recordData = { date, description, amount, type }
+  const response = await axios.post(`${API_URL}api/finance/add`, recordData);
   return response.data;
 };
 
-export const createAccount = async (accountData) => {
-  const response = await axios.post(`${API_URL}/finance/accounts`, accountData);
+// Get Report (Profit & Transactions)
+export const getFinanceReport = async (month, year) => {
+  // e.g. /api/finance/report?month=11&year=2025
+  const response = await axios.get(`${API_URL}api/finance/report`, {
+    params: { month, year }
+  });
   return response.data;
 };
 
-// --- Reporting ---
-export const getTrialBalance = async () => {
-  const response = await axios.get(`${API_URL}/finance/reports/trial-balance`);
+// --- HR & PAYROLL ---
+
+// Add Detailed Employee
+export const createEmployee = async (formData) => {
+  // Must use headers for FormData (file uploads)
+  const response = await axios.post(`${API_URL}api/hr/employees`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
   return response.data;
 };
 
-// --- HR & Payroll ---
-export const runPayroll = async (month, year) => {
-  const response = await axios.post(`${API_URL}/hr/run`, { month, year });
-  return response.data;
-};
-
+// Get Employee List
 export const getEmployees = async () => {
-  const response = await axios.get(`${API_URL}/hr/employees`);
+  const response = await axios.get(`${API_URL}api/hr/employees`);
   return response.data;
 };
 
-export const createEmployee = async (employeeData) => {
-  const response = await axios.post(`${API_URL}/hr/employees`, employeeData);
+// Get Single Employee (Profile)
+export const getEmployeeById = async (id) => {
+  const response = await axios.get(`${API_URL}api/hr/employees/${id}`);
   return response.data;
 };
 
-// --- Expense Management ---
-export const getExpenses = async () => {
-  const response = await axios.get(`${API_URL}/finance/expenses`);
-  return response.data;
-};
-
-export const createExpense = async (expenseData) => {
-  const response = await axios.post(`${API_URL}/finance/expenses`, expenseData);
+// Process Salary (Auto-adds to Finance)
+export const processSalary = async (payrollData) => {
+  // payrollData = { employeeId, month, amount, authorizedBy }
+  const response = await axios.post(`${API_URL}api/hr/process-salary`, payrollData);
   return response.data;
 };
