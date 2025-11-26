@@ -3,17 +3,16 @@ import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom"
 import {MagnifyingGlassIcon, Squares2X2Icon,BriefcaseIcon, UsersIcon, DocumentDuplicateIcon,ArrowLeftOnRectangleIcon, BuildingOffice2Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ClipboardDocumentListIcon,
   BanknotesIcon,
-  UserGroupIcon,
-  ReceiptPercentIcon,
+  
 } from "@heroicons/react/24/outline"; 
 import { 
   Squares2X2Icon as SquaresSolid,
   BriefcaseIcon as BriefcaseSolid,
   UsersIcon as UsersSolid,
   DocumentDuplicateIcon as DocSolid,
-  BuildingOffice2Icon as BuildingSolid
+  BuildingOffice2Icon as BuildingSolid,
+  UserGroupIcon
 } from "@heroicons/react/24/solid"; 
 
 import ProjectOverview from "./project/ProjectOverview";
@@ -38,12 +37,11 @@ import EditOrganization from "./Organizations/editOrganization";
 import EditCustomers from "./customers/EditCustomers";
 import AddInvoice from "./invoicing/AddInvoice";
 import InvoicePreview from "./invoicing/InvoicePreview";
-import { CalculatorIcon } from "lucide-react";
-import PayrollRun from "./hr/PayrollRun";
-import TrialBalance from "./finance/TrialBalance";
-import ChartOfAccounts from "./finance/ChartOfAccounts";
-import EmployeeManagement from "./hr/EmployeeManagement";
-import ExpenseManagement from "./hr/ExpenseManagement";
+import FinanceDashboard from "./finance/FinanceDashboard";
+import EmployeeDirectory from "./hr/EmployeeDirectory";
+import AddEmployee from "./hr/AddEmployee";
+import EmployeeProfile from "./hr/EmployeeProfile";
+
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL ; 
 function Dashboard() {
@@ -121,11 +119,8 @@ function Dashboard() {
     { name: "Customers", path: "/dashboard/customers", icon: UsersIcon, activeIcon: UsersSolid },
     { name: "Resources", path: "/dashboard/resources", icon: DocumentDuplicateIcon, activeIcon: DocSolid },
 
-    { name: "Chart of Accounts", path: "/dashboard/finance/accounts", icon: CalculatorIcon, activeIcon: CalculatorIcon },
-    { name: "Financial Reports", path: "/dashboard/finance/reports", icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIcon },
-    { name: "Payroll", path: "/dashboard/hr/payroll", icon: BanknotesIcon, activeIcon: BanknotesIcon },
-    { name: "Expenses", path: "/dashboard/finance/expenses", icon: ReceiptPercentIcon, activeIcon: ReceiptPercentIcon },
-  { name: "Employees", path: "/dashboard/hr/employees", icon: UserGroupIcon, activeIcon: UserGroupIcon },
+    { name: "Finance", path: "/dashboard/finance", icon: BanknotesIcon, activeIcon: BanknotesIcon },
+    { name: "Employees", path: "/dashboard/hr/employees", icon: UserGroupIcon, activeIcon: UserGroupIcon },
   ];
 
   const isActive = (path) => {
@@ -308,11 +303,11 @@ function Dashboard() {
                     <Route path="organizations/:orgId/projects/:projectId/invoice/new" element={<AddInvoice />} />
                     <Route path="organizations/:orgId/projects/:projectId/invoice/edit/:invoiceId" element={<AddInvoice />} />
                     <Route path="invoices/:orgId/:id" element={<InvoicePreview />} />
-                    <Route path="finance/accounts" element={<ChartOfAccounts />} />
-                    <Route path="finance/reports" element={<TrialBalance />} />
-                    <Route path="hr/payroll" element={<PayrollRun />} />
-                    <Route path="hr/employees" element={<EmployeeManagement />} />
-                   <Route path="finance/expenses" element={<ExpenseManagement />} />
+                    <Route path="finance" element={<FinanceDashboard />} />
+                    <Route path="hr/employees" element={<EmployeeDirectory />} />
+                    <Route path="hr/add-employee" element={<AddEmployee />} />
+                    <Route path="hr/employees/:id" element={<EmployeeProfile />} />
+
                 </Routes>
             </div>
         </main>
